@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "dynatrace": {
+      "command": "npx",
+      "args": ["-y", "@dynatrace-oss/dynatrace-mcp-server@latest"],
+      "env": {
+        "DT_ENVIRONMENT": "https://YOUR_TENANT_ID.apps.dynatrace.com",
+        "DT_AUTH_TOKEN": "your-dynatrace-platform-token-here"
+      }
+    }
+  }
+}

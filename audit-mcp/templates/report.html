@@ -1,0 +1,1748 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- TITLE: "Auditoría de Observabilidad — {tenant_name} — {audit_date}" -->
+    <title>Auditoría de Observabilidad — Observability Auditor</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+        /* ═══════════════════════════════════════════════
+           CSS CUSTOM PROPERTIES
+           ═══════════════════════════════════════════════ */
+        :root {
+            --brand-1: #d97f7f;
+            --brand-1-light: #f0b3b3;
+            --brand-1-dark: #b85c5c;
+            --brand-2: #5a5a5a;
+            --brand-3: #0f0f10;
+            --bg-primary: #f8f9fc;
+            --bg-secondary: #ffffff;
+            --bg-card: rgba(255, 255, 255, 0.72);
+            --bg-sidebar: rgba(255, 255, 255, 0.85);
+            --text-primary: #1a1a2e;
+            --text-secondary: #4a4a6a;
+            --text-muted: #8888a0;
+            --border-color: rgba(0, 0, 0, 0.06);
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.06);
+            --shadow-md: 0 4px 16px rgba(0,0,0,0.06), 0 2px 4px rgba(0,0,0,0.04);
+            --shadow-lg: 0 12px 40px rgba(0,0,0,0.08), 0 4px 12px rgba(0,0,0,0.04);
+            --shadow-glow: 0 0 40px rgba(217, 127, 127, 0.15);
+            --radius-sm: 8px;
+            --radius-md: 12px;
+            --radius-lg: 20px;
+            --radius-xl: 28px;
+            --green: #10b981;
+            --green-bg: rgba(16, 185, 129, 0.08);
+            --yellow: #f59e0b;
+            --yellow-bg: rgba(245, 158, 11, 0.08);
+            --red: #ef4444;
+            --red-bg: rgba(239, 68, 68, 0.08);
+            --blue: #3b82f6;
+            --blue-bg: rgba(59, 130, 246, 0.08);
+            --sidebar-width: 280px;
+            --header-height: 80px;
+        }
+
+        [data-theme="dark"] {
+            --bg-primary: #0f0f1a;
+            --bg-secondary: #1a1a2e;
+            --bg-card: rgba(26, 26, 46, 0.8);
+            --bg-sidebar: rgba(15, 15, 26, 0.92);
+            --text-primary: #e8e8f0;
+            --text-secondary: #a0a0c0;
+            --text-muted: #6a6a8a;
+            --border-color: rgba(255, 255, 255, 0.06);
+            --shadow-sm: 0 1px 3px rgba(0,0,0,0.2);
+            --shadow-md: 0 4px 16px rgba(0,0,0,0.3);
+            --shadow-lg: 0 12px 40px rgba(0,0,0,0.4);
+            --shadow-glow: 0 0 60px rgba(217, 127, 127, 0.2);
+        }
+
+        /* ═══════════════════════════════════════════════
+           RESET & BASE
+           ═══════════════════════════════════════════════ */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        html { scroll-behavior: smooth; font-size: 16px; }
+
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+
+        /* ═══════════════════════════════════════════════
+           ANIMATIONS
+           ═══════════════════════════════════════════════ */
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        @keyframes slideInLeft {
+            from { opacity: 0; transform: translateX(-20px); }
+            to { opacity: 1; transform: translateX(0); }
+        }
+
+        @keyframes scaleIn {
+            from { opacity: 0; transform: scale(0.9); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        @keyframes gaugeAnim {
+            from { --gauge-value: 0; }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        @keyframes shimmer {
+            0% { background-position: -200% 0; }
+            100% { background-position: 200% 0; }
+        }
+
+        .animate-in {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.6s cubic-bezier(0.16, 1, 0.3, 1),
+                        transform 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .animate-in.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* ═══════════════════════════════════════════════
+           HEADER / COVER
+           ═══════════════════════════════════════════════ */
+        .report-header {
+            position: relative;
+            background: linear-gradient(135deg, var(--brand-3) 0%, #2a1a2e 40%, var(--brand-1-dark) 100%);
+            color: #fff;
+            padding: 3rem 2rem 4rem calc(var(--sidebar-width) + 3rem);
+            overflow: hidden;
+            min-height: 340px;
+            display: flex;
+            align-items: center;
+        }
+
+        .report-header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -20%;
+            width: 600px;
+            height: 600px;
+            background: radial-gradient(circle, rgba(217,127,127,0.2) 0%, transparent 70%);
+            border-radius: 50%;
+            pointer-events: none;
+        }
+
+        .report-header::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background: linear-gradient(90deg, transparent, rgba(217,127,127,0.4), transparent);
+        }
+
+        .header-content {
+            display: flex;
+            align-items: center;
+            gap: 3rem;
+            width: 100%;
+            max-width: 1200px;
+            animation: fadeIn 0.8s ease;
+            position: relative;
+            z-index: 1;
+        }
+
+        .header-info { flex: 1; }
+
+        .header-logo {
+            height: 52px;
+            margin-bottom: 1rem;
+            filter: brightness(0) invert(1);
+            opacity: 0.9;
+        }
+
+        .header-title {
+            font-size: 2.4rem;
+            font-weight: 800;
+            letter-spacing: -0.03em;
+            line-height: 1.15;
+            margin-bottom: 0.5rem;
+        }
+
+        .header-subtitle {
+            font-size: 1rem;
+            font-weight: 400;
+            color: rgba(255,255,255,0.65);
+            margin-bottom: 0.25rem;
+        }
+
+        .header-tenant {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.85rem;
+            color: rgba(255,255,255,0.5);
+            background: rgba(255,255,255,0.08);
+            padding: 0.35rem 0.9rem;
+            border-radius: 100px;
+            margin-top: 0.75rem;
+            backdrop-filter: blur(8px);
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 0.5rem;
+            margin-top: 1rem;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.4rem;
+            padding: 0.5rem 1.1rem;
+            border-radius: 100px;
+            font-size: 0.82rem;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            font-family: inherit;
+        }
+
+        .btn-glass {
+            background: rgba(255,255,255,0.12);
+            color: #fff;
+            backdrop-filter: blur(8px);
+            border: 1px solid rgba(255,255,255,0.15);
+        }
+
+        .btn-glass:hover {
+            background: rgba(255,255,255,0.2);
+            transform: translateY(-1px);
+        }
+
+        /* ═══════════════════════════════════════════════
+           GLOBAL SCORE GAUGE
+           ═══════════════════════════════════════════════ */
+        .gauge-container {
+            flex-shrink: 0;
+            width: 180px;
+            height: 180px;
+            position: relative;
+            animation: scaleIn 0.8s cubic-bezier(0.16, 1, 0.3, 1) 0.3s both;
+        }
+
+        /* GAUGE RING: background uses conic-gradient with semaphore color.
+           --gauge-pct CSS variable = global_score (0-100).
+           Color values: green=#10b981 (>=70), yellow=#f59e0b (>=40), red=#ef4444 (<40) */
+        .gauge-ring {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            background: conic-gradient(
+                /* PLACEHOLDER: {semaphore_color} calc({global_score}%) */
+                #10b981 calc(var(--gauge-pct, 75) * 1%),
+                rgba(255,255,255,0.1) calc(var(--gauge-pct, 75) * 1%)
+            );
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            --gauge-pct: 75; /* PLACEHOLDER: global_score */
+        }
+
+        .gauge-inner {
+            width: 140px;
+            height: 140px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--brand-3) 0%, #2a1a2e 100%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            box-shadow: inset 0 2px 20px rgba(0,0,0,0.3);
+        }
+
+        .gauge-score {
+            font-size: 2.8rem;
+            font-weight: 900;
+            line-height: 1;
+            letter-spacing: -0.04em;
+        }
+
+        .gauge-label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.12em;
+            color: rgba(255,255,255,0.5);
+            margin-top: 0.2rem;
+        }
+
+        /* ═══════════════════════════════════════════════
+           SIDEBAR NAVIGATION
+           ═══════════════════════════════════════════════ */
+        .sidebar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: var(--sidebar-width);
+            height: 100vh;
+            background: var(--bg-sidebar);
+            backdrop-filter: blur(20px);
+            border-right: 1px solid var(--border-color);
+            z-index: 100;
+            overflow-y: auto;
+            padding: 1.5rem 0;
+            transition: background 0.3s ease;
+        }
+
+        .sidebar-brand {
+            padding: 0 1.5rem 1.2rem;
+            border-bottom: 1px solid var(--border-color);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .sidebar-brand img {
+            height: 28px;
+        }
+
+        .sidebar-brand span {
+            font-weight: 700;
+            font-size: 0.9rem;
+            color: var(--text-primary);
+        }
+
+        .sidebar-section-label {
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-muted);
+            padding: 0.8rem 1.5rem 0.4rem;
+        }
+
+        .sidebar-nav { list-style: none; }
+
+        .sidebar-nav a {
+            display: flex;
+            align-items: center;
+            gap: 0.6rem;
+            padding: 0.55rem 1.5rem;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.82rem;
+            font-weight: 500;
+            border-left: 3px solid transparent;
+            transition: all 0.2s ease;
+        }
+
+        .sidebar-nav a:hover {
+            color: var(--text-primary);
+            background: rgba(217, 127, 127, 0.06);
+        }
+
+        .sidebar-nav a.active {
+            color: var(--brand-1-dark);
+            background: rgba(217, 127, 127, 0.08);
+            border-left-color: var(--brand-1);
+            font-weight: 600;
+        }
+
+        .sidebar-nav .nav-score {
+            margin-left: auto;
+            font-size: 0.72rem;
+            font-weight: 700;
+            padding: 0.15rem 0.5rem;
+            border-radius: 100px;
+            min-width: 36px;
+            text-align: center;
+        }
+
+        .sidebar-search {
+            padding: 0 1rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .sidebar-search input {
+            width: 100%;
+            padding: 0.5rem 0.8rem 0.5rem 2.2rem;
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-sm);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            font-size: 0.8rem;
+            font-family: inherit;
+            outline: none;
+            transition: border-color 0.2s;
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%23888' stroke-width='2'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: 0.6rem center;
+        }
+
+        .sidebar-search input:focus {
+            border-color: var(--brand-1);
+        }
+
+        .sidebar-footer {
+            padding: 1rem 1.5rem;
+            border-top: 1px solid var(--border-color);
+            margin-top: 1rem;
+        }
+
+        .theme-toggle {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.78rem;
+            color: var(--text-muted);
+            cursor: pointer;
+            background: none;
+            border: none;
+            font-family: inherit;
+            padding: 0.4rem 0;
+            width: 100%;
+        }
+
+        .theme-toggle:hover { color: var(--text-primary); }
+
+        /* ═══════════════════════════════════════════════
+           MAIN CONTENT
+           ═══════════════════════════════════════════════ */
+        .main-content {
+            margin-left: var(--sidebar-width);
+            min-height: 100vh;
+        }
+
+        .content-wrapper {
+            max-width: 1100px;
+            margin: 0 auto;
+            padding: 2.5rem 2.5rem 4rem;
+        }
+
+        /* ═══════════════════════════════════════════════
+           GLASS CARD
+           ═══════════════════════════════════════════════ */
+        .card {
+            background: var(--bg-card);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-lg);
+            box-shadow: var(--shadow-md);
+            padding: 2rem;
+            margin-bottom: 2rem;
+            transition: box-shadow 0.3s ease, transform 0.3s ease;
+        }
+
+        .card:hover {
+            box-shadow: var(--shadow-lg);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        .card-title {
+            font-size: 1.3rem;
+            font-weight: 700;
+            color: var(--text-primary);
+            letter-spacing: -0.02em;
+        }
+
+        .section-title {
+            font-size: 1.6rem;
+            font-weight: 800;
+            color: var(--text-primary);
+            letter-spacing: -0.03em;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+
+        .section-title::before {
+            content: '';
+            width: 4px;
+            height: 1.4em;
+            background: linear-gradient(180deg, var(--brand-1), var(--brand-1-dark));
+            border-radius: 4px;
+            flex-shrink: 0;
+        }
+
+        /* ═══════════════════════════════════════════════
+           CATEGORY SCORE CARDS
+           ═══════════════════════════════════════════════ */
+        .score-cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.25rem;
+            margin-bottom: 2rem;
+        }
+
+        .score-card {
+            background: var(--bg-card);
+            backdrop-filter: blur(16px);
+            border: 1px solid var(--border-color);
+            border-radius: var(--radius-md);
+            padding: 1.5rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+            box-shadow: var(--shadow-sm);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .score-card:hover {
+            transform: translateY(-3px);
+            box-shadow: var(--shadow-lg);
+        }
+
+        .score-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            /* PLACEHOLDER: background = semaphore_color for this category */
+        }
+
+        .score-card-value {
+            font-size: 2.6rem;
+            font-weight: 900;
+            letter-spacing: -0.04em;
+            line-height: 1;
+            margin-bottom: 0.3rem;
+            /* PLACEHOLDER: color = semaphore_color(score) */
+        }
+
+        .score-card-label {
+            font-size: 0.78rem;
+            font-weight: 600;
+            text-transform: capitalize;
+            color: var(--text-secondary);
+            letter-spacing: 0.02em;
+        }
+
+        .score-bar {
+            height: 6px;
+            background: var(--border-color);
+            border-radius: 6px;
+            margin-top: 1rem;
+            overflow: hidden;
+        }
+
+        .score-bar-fill {
+            height: 100%;
+            border-radius: 6px;
+            transition: width 1.5s cubic-bezier(0.16, 1, 0.3, 1);
+            background: linear-gradient(90deg, var(--red), var(--yellow), var(--green));
+            background-size: 300% 100%;
+            /* PLACEHOLDER: width={score}%; background-position={(100-score)}% 0 */
+        }
+
+        /* ═══════════════════════════════════════════════
+           AGENT SECTION
+           ═══════════════════════════════════════════════ */
+        .agent-section {
+            scroll-margin-top: 1rem;
+        }
+
+        .agent-header-row {
+            display: flex;
+            align-items: center;
+            gap: 1.2rem;
+            flex-wrap: wrap;
+        }
+
+        .agent-mini-gauge {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            position: relative;
+            /* PLACEHOLDER: background = conic-gradient({semaphore_color} {score*3.6}deg, var(--border-color) 0deg) */
+        }
+
+        .agent-mini-gauge-inner {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: var(--bg-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85rem;
+            font-weight: 800;
+        }
+
+        .agent-meta {
+            display: flex;
+            gap: 0.6rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            padding: 0.25rem 0.7rem;
+            border-radius: 100px;
+            font-size: 0.72rem;
+            font-weight: 600;
+            letter-spacing: 0.01em;
+        }
+
+        .badge-green { background: var(--green-bg); color: var(--green); }
+        .badge-yellow { background: var(--yellow-bg); color: var(--yellow); }
+        .badge-red { background: var(--red-bg); color: var(--red); }
+        .badge-blue { background: var(--blue-bg); color: var(--blue); }
+        .badge-muted {
+            background: rgba(136,136,160,0.08);
+            color: var(--text-muted);
+        }
+
+        /* ═══════════════════════════════════════════════
+           STATS MINI CARDS
+           ═══════════════════════════════════════════════ */
+        .stats-row {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 0.8rem;
+            margin: 1.2rem 0;
+        }
+
+        .stat-mini {
+            background: var(--bg-primary);
+            border-radius: var(--radius-sm);
+            padding: 0.8rem 1rem;
+            text-align: center;
+            border: 1px solid var(--border-color);
+        }
+
+        .stat-mini-value {
+            font-size: 1.5rem;
+            font-weight: 800;
+            line-height: 1;
+        }
+
+        .stat-mini-label {
+            font-size: 0.68rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+            color: var(--text-muted);
+            margin-top: 0.2rem;
+        }
+
+        /* ═══════════════════════════════════════════════
+           FINDINGS TABLE
+           ═══════════════════════════════════════════════ */
+        .table-controls {
+            display: flex;
+            gap: 0.4rem;
+            margin-bottom: 0.8rem;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 0.35rem 0.8rem;
+            border-radius: 100px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            border: 1px solid var(--border-color);
+            background: var(--bg-primary);
+            color: var(--text-secondary);
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+
+        .filter-btn:hover, .filter-btn.active {
+            border-color: var(--brand-1);
+            background: rgba(217,127,127,0.08);
+            color: var(--brand-1-dark);
+        }
+
+        .findings-table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            font-size: 0.82rem;
+        }
+
+        .findings-table thead th {
+            text-align: left;
+            padding: 0.7rem 0.8rem;
+            font-size: 0.7rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.06em;
+            color: var(--text-muted);
+            border-bottom: 2px solid var(--border-color);
+            position: sticky;
+            top: 0;
+            background: var(--bg-card);
+            z-index: 1;
+            cursor: pointer;
+            user-select: none;
+        }
+
+        .findings-table thead th:hover {
+            color: var(--text-primary);
+        }
+
+        .findings-table tbody tr {
+            transition: background 0.15s;
+        }
+
+        .findings-table tbody tr:hover {
+            background: rgba(217,127,127,0.04);
+        }
+
+        .findings-table td {
+            padding: 0.6rem 0.8rem;
+            border-bottom: 1px solid var(--border-color);
+            vertical-align: top;
+        }
+
+        .finding-row[data-status="pass"] td:first-child {
+            box-shadow: inset 3px 0 0 var(--green);
+        }
+
+        .finding-row[data-status="warn"] td:first-child {
+            box-shadow: inset 3px 0 0 var(--yellow);
+        }
+
+        .finding-row[data-status="fail"] td:first-child {
+            box-shadow: inset 3px 0 0 var(--red);
+        }
+
+        .finding-row[data-status="info"] td:first-child {
+            box-shadow: inset 3px 0 0 var(--blue);
+        }
+
+        /* ═══════════════════════════════════════════════
+           MARKDOWN-GENERATED TABLES (AI analysis sections)
+           Targets .analysis-content table and .executive-narrative table
+           ═══════════════════════════════════════════════ */
+        .analysis-content table,
+        .executive-narrative table {
+            width: 100%;
+            border-collapse: separate;
+            border-spacing: 0;
+            font-size: 0.82rem;
+            margin: 1rem 0;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 1px solid var(--border-color);
+        }
+
+        .analysis-content table thead th,
+        .executive-narrative table thead th {
+            text-align: left;
+            padding: 0.7rem 0.8rem;
+            font-size: 0.72rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            background: var(--bg-card);
+            border-bottom: 2px solid var(--border-color);
+        }
+
+        .analysis-content table tbody td,
+        .executive-narrative table tbody td {
+            padding: 0.6rem 0.8rem;
+            border-bottom: 1px solid var(--border-color);
+            vertical-align: top;
+        }
+
+        .analysis-content table tbody tr:last-child td,
+        .executive-narrative table tbody tr:last-child td {
+            border-bottom: none;
+        }
+
+        .analysis-content table tbody tr:hover,
+        .executive-narrative table tbody tr:hover {
+            background: rgba(217,127,127,0.04);
+        }
+
+        .status-dot {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.3rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.7rem;
+            letter-spacing: 0.04em;
+        }
+
+        .status-dot::before {
+            content: '';
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .status-dot.pass::before { background: var(--green); }
+        .status-dot.warn::before { background: var(--yellow); }
+        .status-dot.fail::before { background: var(--red); }
+        .status-dot.info::before { background: var(--blue); }
+
+        .blast-badge {
+            display: inline-block;
+            padding: 0.15rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.65rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+        }
+
+        .blast-critical { background: var(--red-bg); color: var(--red); }
+        .blast-high { background: rgba(249,115,22,0.1); color: #f97316; }
+        .blast-medium { background: var(--yellow-bg); color: var(--yellow); }
+        .blast-low { background: var(--green-bg); color: var(--green); }
+
+        .table-empty {
+            text-align: center;
+            padding: 2rem;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        /* ═══════════════════════════════════════════════
+           COLLAPSIBLE ANALYSIS
+           ═══════════════════════════════════════════════ */
+        .collapsible-header {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            cursor: pointer;
+            padding: 0.8rem 0;
+            color: var(--text-secondary);
+            font-weight: 600;
+            font-size: 0.88rem;
+            user-select: none;
+        }
+
+        .collapsible-header:hover { color: var(--text-primary); }
+
+        .collapsible-arrow {
+            transition: transform 0.3s ease;
+            font-size: 0.7rem;
+        }
+
+        .collapsible-header.open .collapsible-arrow {
+            transform: rotate(90deg);
+        }
+
+        .collapsible-body {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.3s;
+            opacity: 0;
+        }
+
+        .collapsible-body.open {
+            max-height: 5000px;
+            opacity: 1;
+        }
+
+        .analysis-content {
+            padding: 1rem 1.2rem;
+            background: var(--bg-primary);
+            border-radius: var(--radius-sm);
+            border-left: 3px solid var(--brand-1);
+            font-size: 0.85rem;
+            line-height: 1.7;
+            color: var(--text-secondary);
+        }
+
+        .analysis-content h1, .analysis-content h2, .analysis-content h3 {
+            color: var(--text-primary);
+            margin: 1rem 0 0.5rem;
+            font-weight: 700;
+        }
+
+        .analysis-content h2 { font-size: 1.1rem; }
+        .analysis-content h3 { font-size: 0.95rem; }
+
+        .analysis-content ul, .analysis-content ol {
+            padding-left: 1.5rem;
+            margin: 0.5rem 0;
+        }
+
+        .analysis-content p { margin: 0.5rem 0; }
+
+        .analysis-content code {
+            background: rgba(217,127,127,0.08);
+            padding: 0.15rem 0.4rem;
+            border-radius: 4px;
+            font-size: 0.82em;
+        }
+
+        /* ═══════════════════════════════════════════════
+           EXECUTIVE SUMMARY
+           ═══════════════════════════════════════════════ */
+        .executive-narrative {
+            padding: 1.5rem;
+            background: var(--bg-primary);
+            border-radius: var(--radius-md);
+            border: 1px solid var(--border-color);
+            line-height: 1.8;
+            color: var(--text-secondary);
+            font-size: 0.88rem;
+        }
+
+        .executive-narrative h1, .executive-narrative h2, .executive-narrative h3 {
+            color: var(--text-primary);
+            margin: 1rem 0 0.5rem;
+        }
+
+        .executive-narrative ul, .executive-narrative ol {
+            padding-left: 1.5rem;
+        }
+
+        /* ═══════════════════════════════════════════════
+           FOOTER
+           ═══════════════════════════════════════════════ */
+        .report-footer {
+            margin-left: var(--sidebar-width);
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border-color);
+            padding: 2rem 2.5rem;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.78rem;
+        }
+
+        .report-footer img {
+            height: 24px;
+            opacity: 0.4;
+            margin-bottom: 0.5rem;
+        }
+
+        .footer-powered {
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 0.25rem;
+        }
+
+        /* ═══════════════════════════════════════════════
+           SEARCH HIGHLIGHT
+           ═══════════════════════════════════════════════ */
+        .search-highlight {
+            background: rgba(245, 158, 11, 0.3);
+            border-radius: 2px;
+            padding: 0 2px;
+        }
+
+        .hidden-by-search { display: none !important; }
+        .hidden-by-filter { display: none !important; }
+
+        /* ═══════════════════════════════════════════════
+           RESPONSIVE
+           ═══════════════════════════════════════════════ */
+        @media (max-width: 1024px) {
+            .sidebar { display: none; }
+            .main-content { margin-left: 0; }
+            .report-header { padding-left: 2rem; }
+            .report-footer { margin-left: 0; }
+        }
+
+        @media (max-width: 768px) {
+            .header-content { flex-direction: column; text-align: center; }
+            .gauge-container { width: 140px; height: 140px; }
+            .gauge-inner { width: 110px; height: 110px; }
+            .gauge-score { font-size: 2rem; }
+            .header-title { font-size: 1.6rem; }
+            .content-wrapper { padding: 1.5rem 1rem; }
+            .card { padding: 1.2rem; }
+            .score-cards-grid { grid-template-columns: 1fr 1fr; }
+            .findings-table { font-size: 0.75rem; }
+        }
+
+        /* ═══════════════════════════════════════════════
+           PRINT STYLES
+           ═══════════════════════════════════════════════ */
+        @media print {
+            .sidebar { display: none !important; }
+            .main-content { margin-left: 0 !important; }
+            .report-header { padding-left: 2rem !important; min-height: auto; }
+            .report-footer { margin-left: 0 !important; }
+            .btn, .filter-btn, .theme-toggle, .sidebar-search { display: none !important; }
+            .collapsible-body { max-height: none !important; opacity: 1 !important; }
+            .card { break-inside: avoid; box-shadow: none; border: 1px solid #ddd; }
+            .animate-in { opacity: 1 !important; transform: none !important; }
+            body { background: #fff; color: #000; }
+            .score-card { break-inside: avoid; }
+            .findings-table { font-size: 0.7rem; }
+            @page { margin: 1.5cm; }
+        }
+
+        /* ═══════════════════════════════════════════════
+           SCROLLBAR
+           ═══════════════════════════════════════════════ */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 3px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(0,0,0,0.25); }
+        [data-theme="dark"] ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); }
+    </style>
+</head>
+<body>
+
+    <!-- ═══════════════════════════════════════════════
+         SIDEBAR: fixed left nav, 280px wide, frosted glass
+         Contains: logo, global search input, "Resumen" section link,
+         "Agentes (N)" section with one link per agent showing score badge,
+         theme toggle button at bottom.
+         Active state tracks scroll position via JS scroll-spy.
+         ═══════════════════════════════════════════════ -->
+    <nav class="sidebar" id="sidebar">
+        <div class="sidebar-brand">
+            <!-- LOGO: <img src="data:image/png;base64,{logo_base64}" alt="Observability Auditor"> -->
+            <span>Observability Auditor</span>
+        </div>
+
+        <div class="sidebar-search">
+            <input type="text" id="globalSearch" placeholder="Buscar findings..." autocomplete="off">
+        </div>
+
+        <div class="sidebar-section-label">Resumen</div>
+        <ul class="sidebar-nav">
+            <li>
+                <a href="#executive-summary" data-section="executive-summary">
+                    <span>&#9670;</span> Resumen Ejecutivo
+                    <!-- NAV SCORE BADGE: style="background:{semaphore_color}22; color:{semaphore_color};"
+                         text = "{global_score}%" -->
+                    <span class="nav-score" style="background: #10b98122; color: #10b981;">75%</span>
+                </a>
+            </li>
+        </ul>
+
+        <!-- SIDEBAR AGENTS: one <li> per agent result
+             href="#agent-{index}" data-section="agent-{index}"
+             Score badge colored by semaphore_color(result.score)
+             Agent name: result.agent_name replace('_',' ') title-cased, max 22 chars -->
+        <div class="sidebar-section-label">Agentes (12)</div>
+        <ul class="sidebar-nav" id="agentNav">
+            <li>
+                <a href="#agent-1" data-section="agent-1">
+                    <span class="status-dot pass" style="font-size:0;width:8px;height:8px;"></span>
+                    Slo Configuration
+                    <span class="nav-score" style="background: #10b98122; color: #10b981;">82%</span>
+                </a>
+            </li>
+            <li>
+                <a href="#agent-2" data-section="agent-2">
+                    <span class="status-dot warn" style="font-size:0;width:8px;height:8px;"></span>
+                    Alert Coverage
+                    <span class="nav-score" style="background: #f59e0b22; color: #f59e0b;">61%</span>
+                </a>
+            </li>
+            <li>
+                <a href="#agent-3" data-section="agent-3">
+                    <span class="status-dot fail" style="font-size:0;width:8px;height:8px;"></span>
+                    Log Management
+                    <span class="nav-score" style="background: #ef444422; color: #ef4444;">34%</span>
+                </a>
+            </li>
+            <!-- REPEAT pattern for all 12 agent results -->
+        </ul>
+
+        <div class="sidebar-footer">
+            <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()">
+                <span id="themeIcon">&#9789;</span>
+                <span id="themeLabel">Modo Oscuro</span>
+            </button>
+        </div>
+    </nav>
+
+    <!-- ═══════════════════════════════════════════════
+         HEADER: full-width dark gradient banner with gauge
+         Contains: Logo (white), report title, subtitle,
+         tenant URL pill, action buttons (Print, Expand All, Collapse All),
+         global score gauge (conic-gradient ring).
+         ═══════════════════════════════════════════════ -->
+    <div class="main-content">
+        <header class="report-header">
+            <div class="header-content">
+                <div class="header-info">
+                    <!-- LOGO: <img src="data:image/png;base64,{logo_base64}" alt="Observability Auditor" class="header-logo"> -->
+                    <h1 class="header-title">Auditoría de Observabilidad</h1>
+                    <p class="header-subtitle">Informe de evaluación integral del entorno Dynatrace</p>
+                    <!-- TENANT: {tenant_url} -->
+                    <div class="header-tenant">
+                        <span>&#127760;</span> abc12345.live.dynatrace.com
+                    </div>
+                    <div class="header-actions">
+                        <button class="btn btn-glass" onclick="window.print()">&#128424; Imprimir PDF</button>
+                        <button class="btn btn-glass" onclick="expandAll()">&#128194; Expandir Todo</button>
+                        <button class="btn btn-glass" onclick="collapseAll()">&#128193; Colapsar Todo</button>
+                    </div>
+                </div>
+
+                <!-- GAUGE: conic-gradient ring showing global_score 0-100.
+                     Ring color = semaphore_color(global_score):
+                       >= 70 → #10b981 (green)
+                       >= 40 → #f59e0b (yellow)
+                        < 40 → #ef4444 (red)
+                     Inner circle shows numeric score colored by semaphore_color. -->
+                <div class="gauge-container">
+                    <div class="gauge-ring">
+                        <div class="gauge-inner">
+                            <!-- SCORE: {global_score} colored by semaphore_color -->
+                            <span class="gauge-score" style="color: #10b981;">75</span>
+                            <span class="gauge-label">Score Global</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="content-wrapper">
+
+            <!-- ═══════════════════════════════════════════════
+                 SCORE OVERVIEW: category score cards grid
+                 One card per category (from category_scores dict),
+                 plus a final card for global score with highlighted border.
+                 Each card: large score number + label + animated bar.
+                 ═══════════════════════════════════════════════ -->
+            <section id="executive-summary" class="agent-section animate-in">
+                <h2 class="section-title">Resumen Ejecutivo</h2>
+
+                <!-- SCORE CARDS GRID: iterate category_scores.items()
+                     Each card gets score-card-value colored by semaphore_color(score).
+                     Last card = global score, has border: 2px solid {semaphore_color}33 -->
+                <div class="score-cards-grid">
+                    <div class="score-card animate-in">
+                        <!-- CATEGORY SCORE CARD: style="color:{semaphore_color}" on value -->
+                        <div class="score-card-value" style="color: #10b981;">82</div>
+                        <div class="score-card-label">Cobertura</div>
+                        <div class="score-bar">
+                            <div class="score-bar-fill" style="width: 82%; background-position: 18% 0;"></div>
+                        </div>
+                    </div>
+                    <div class="score-card animate-in">
+                        <div class="score-card-value" style="color: #f59e0b;">61</div>
+                        <div class="score-card-label">Alertas</div>
+                        <div class="score-bar">
+                            <div class="score-bar-fill" style="width: 61%; background-position: 39% 0;"></div>
+                        </div>
+                    </div>
+                    <div class="score-card animate-in">
+                        <div class="score-card-value" style="color: #ef4444;">34</div>
+                        <div class="score-card-label">Logs</div>
+                        <div class="score-bar">
+                            <div class="score-bar-fill" style="width: 34%; background-position: 66% 0;"></div>
+                        </div>
+                    </div>
+                    <!-- GLOBAL SCORE CARD: border: 2px solid {semaphore_color}33 -->
+                    <div class="score-card animate-in" style="border: 2px solid #10b98133;">
+                        <div class="score-card-value" style="color: #10b981;">75</div>
+                        <div class="score-card-label">Score Global</div>
+                        <div class="score-bar">
+                            <div class="score-bar-fill" style="width: 75%; background-position: 25% 0;"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- ═══════════════════════════════════════════════
+                     EXECUTIVE SUMMARY: AI-generated analysis (HTML from markdown)
+                     Content rendered inside .executive-narrative div.
+                     Can contain h1/h2/h3, ul/ol, p, tables (styled above).
+                     ═══════════════════════════════════════════════ -->
+                <div class="card">
+                    <div class="executive-narrative">
+                        <!-- EXECUTIVE SUMMARY CONTENT: {executive_summary | safe}
+                             This is HTML converted from AI-generated markdown.
+                             Example structure below: -->
+                        <h2>Evaluación General</h2>
+                        <p>El entorno Dynatrace presenta una madurez observabilidad de nivel <strong>intermedio</strong>, con fortalezas en cobertura de SLOs pero brechas críticas en gestión de logs y cobertura de alertas en servicios de alto impacto.</p>
+                        <h3>Hallazgos Prioritarios</h3>
+                        <ul>
+                            <li>34% de servicios críticos sin alertas de anomalía configuradas</li>
+                            <li>Log ingest sin retención definida en 8 aplicaciones core</li>
+                            <li>SLOs sin ventana de error budget en producción</li>
+                        </ul>
+                        <h3>Recomendaciones Inmediatas</h3>
+                        <table>
+                            <thead>
+                                <tr><th>Prioridad</th><th>Acción</th><th>Impacto</th></tr>
+                            </thead>
+                            <tbody>
+                                <tr><td>Alta</td><td>Configurar alertas en servicios CRITICAL</td><td>Reducir MTTR 40%</td></tr>
+                                <tr><td>Media</td><td>Definir retención de logs por tier</td><td>Reducir costos storage</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+            <!-- ═══════════════════════════════════════════════
+                 AGENT SECTIONS: one section per agent result (12 total)
+                 id="agent-{index}" — used by sidebar scroll-spy
+                 Each section = one .card with:
+                   - Agent mini-gauge (conic-gradient circle)
+                   - Agent name (title-cased), score badge, category badge, duration badge
+                   - Stats row: Total / Passed / Failed / Warned counts
+                   - Filter buttons + findings table (if findings exist)
+                   - Collapsible AI analysis section (auto-open if score < 55)
+                 ═══════════════════════════════════════════════ -->
+
+            <!-- AGENT SECTION EXAMPLE 1: score >= 70 (green/pass) -->
+            <section id="agent-1" class="agent-section animate-in">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="agent-header-row">
+                            <!-- MINI GAUGE: background = conic-gradient({semaphore_color} {score*3.6}deg, var(--border-color) 0deg) -->
+                            <div class="agent-mini-gauge" style="background: conic-gradient(#10b981 295.2deg, var(--border-color) 0deg);">
+                                <div class="agent-mini-gauge-inner">
+                                    <span style="color: #10b981; font-weight: 800;">82</span>
+                                </div>
+                            </div>
+                            <div>
+                                <h3 class="card-title">Slo Configuration</h3>
+                                <div class="agent-meta">
+                                    <!-- SCORE BADGE: class="badge badge-{semaphore(score)}" -->
+                                    <span class="badge badge-green">&#x1f7e2; 82%</span>
+                                    <!-- CATEGORY BADGE: result.category title-cased -->
+                                    <span class="badge badge-muted">Reliability</span>
+                                    <!-- DURATION BADGE: result.duration_ms -->
+                                    <span class="badge badge-muted">&#9201; 1243ms</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- STATS ROW: Total, Passed (green), Failed (red), Warned (yellow) -->
+                    <div class="stats-row">
+                        <div class="stat-mini">
+                            <div class="stat-mini-value" style="color: var(--text-primary);">24</div>
+                            <div class="stat-mini-label">Total</div>
+                        </div>
+                        <div class="stat-mini">
+                            <div class="stat-mini-value" style="color: var(--green);">19</div>
+                            <div class="stat-mini-label">Passed</div>
+                        </div>
+                        <div class="stat-mini">
+                            <div class="stat-mini-value" style="color: var(--red);">2</div>
+                            <div class="stat-mini-label">Failed</div>
+                        </div>
+                        <div class="stat-mini">
+                            <div class="stat-mini-value" style="color: var(--yellow);">3</div>
+                            <div class="stat-mini-label">Warned</div>
+                        </div>
+                    </div>
+
+                    <!-- FILTER BUTTONS: onclick="filterFindings({index}, 'all'|'pass'|'warn'|'fail'|'info', this)"
+                         First button shows total count, others filter by status. -->
+                    <div class="table-controls" data-agent="1">
+                        <button class="filter-btn active" onclick="filterFindings(1, 'all', this)">Todos (24)</button>
+                        <button class="filter-btn" onclick="filterFindings(1, 'pass', this)">&#x1f7e2; Pass</button>
+                        <button class="filter-btn" onclick="filterFindings(1, 'warn', this)">&#x1f7e1; Warn</button>
+                        <button class="filter-btn" onclick="filterFindings(1, 'fail', this)">&#x1f534; Fail</button>
+                        <button class="filter-btn" onclick="filterFindings(1, 'info', this)">&#x1f535; Info</button>
+                    </div>
+
+                    <!-- FINDINGS TABLE: id="findings-table-{index}"
+                         Columns: Status | Entity | Check | Detail | Remediación | Blast Radius
+                         Each row: class="finding-row" data-status="{pass|warn|fail|info}" data-agent="{index}"
+                         Status col uses .status-dot class, Blast col uses .blast-badge .blast-{critical|high|medium|low}
+                         Left border color set by [data-status] selector above. -->
+                    <div style="overflow-x: auto;">
+                        <table class="findings-table" id="findings-table-1">
+                            <thead>
+                                <tr>
+                                    <th onclick="sortTable(1, 0)">Status &#8597;</th>
+                                    <th onclick="sortTable(1, 1)">Entity &#8597;</th>
+                                    <th onclick="sortTable(1, 2)">Check &#8597;</th>
+                                    <th>Detail</th>
+                                    <th>Remediación</th>
+                                    <th onclick="sortTable(1, 5)">Blast Radius &#8597;</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <!-- FINDING ROW PASS -->
+                                <tr class="finding-row" data-status="pass" data-agent="1">
+                                    <td><span class="status-dot pass">PASS</span></td>
+                                    <td>
+                                        <strong>checkout-service</strong>
+                                        <br><span style="font-size: 0.7rem; color: var(--text-muted);">SERVICE-ABC123</span>
+                                    </td>
+                                    <td>SLO target defined</td>
+                                    <td>SLO target 99.9% configured with 30d window</td>
+                                    <td>—</td>
+                                    <td><span class="blast-badge blast-high">high</span></td>
+                                </tr>
+                                <!-- FINDING ROW WARN -->
+                                <tr class="finding-row" data-status="warn" data-agent="1">
+                                    <td><span class="status-dot warn">WARN</span></td>
+                                    <td>
+                                        <strong>payment-api</strong>
+                                        <br><span style="font-size: 0.7rem; color: var(--text-muted);">SERVICE-DEF456</span>
+                                    </td>
+                                    <td>Error budget window</td>
+                                    <td>No error budget burn rate alert configured</td>
+                                    <td>Add burn rate alert with 1h/6h windows</td>
+                                    <td><span class="blast-badge blast-critical">critical</span></td>
+                                </tr>
+                                <!-- FINDING ROW FAIL -->
+                                <tr class="finding-row" data-status="fail" data-agent="1">
+                                    <td><span class="status-dot fail">FAIL</span></td>
+                                    <td>
+                                        <strong>legacy-connector</strong>
+                                        <br><span style="font-size: 0.7rem; color: var(--text-muted);">SERVICE-GHI789</span>
+                                    </td>
+                                    <td>SLO exists</td>
+                                    <td>No SLO defined for this service</td>
+                                    <td>Create SLO targeting availability >= 99.5%</td>
+                                    <td><span class="blast-badge blast-medium">medium</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- COLLAPSIBLE AI ANALYSIS:
+                         auto-open (class="open") when result.score < 55
+                         Title: "Análisis IA — {agent_name replace('_',' ') title-cased}"
+                         Body: .analysis-content with HTML from AI markdown analysis -->
+                    <div style="margin-top: 1.5rem; border-top: 1px solid var(--border-color); padding-top: 1rem;">
+                        <div class="collapsible-header" onclick="toggleCollapsible(this)">
+                            <span class="collapsible-arrow">&#9654;</span>
+                            Análisis IA — Slo Configuration
+                        </div>
+                        <div class="collapsible-body">
+                            <div class="analysis-content">
+                                <!-- AI ANALYSIS CONTENT: {analysis_text | safe}
+                                     HTML from AI-generated markdown, may contain headings, lists, tables, code -->
+                                <h3>Resumen del Agente</h3>
+                                <p>La configuración de SLOs muestra buena madurez general. Se detectaron <code>2 servicios críticos</code> sin error budget definido.</p>
+                                <h3>Acciones Recomendadas</h3>
+                                <ul>
+                                    <li>Configurar burn rate alerts en payment-api (prioridad crítica)</li>
+                                    <li>Crear SLO para legacy-connector con target 99.5%</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- AGENT SECTION EXAMPLE 2: score < 55 (fail/red, analysis auto-open) -->
+            <section id="agent-3" class="agent-section animate-in">
+                <div class="card">
+                    <div class="card-header">
+                        <div class="agent-header-row">
+                            <div class="agent-mini-gauge" style="background: conic-gradient(#ef4444 122.4deg, var(--border-color) 0deg);">
+                                <div class="agent-mini-gauge-inner">
+                                    <span style="color: #ef4444; font-weight: 800;">34</span>
+                                </div>
+                            </div>
+                            <div>
+                                <h3 class="card-title">Log Management</h3>
+                                <div class="agent-meta">
+                                    <span class="badge badge-red">&#x1f534; 34%</span>
+                                    <span class="badge badge-muted">Observability</span>
+                                    <span class="badge badge-muted">&#9201; 876ms</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="stats-row">
+                        <div class="stat-mini">
+                            <div class="stat-mini-value" style="color: var(--text-primary);">18</div>
+                            <div class="stat-mini-label">Total</div>
+                        </div>
+                        <div class="stat-mini">
+                            <div class="stat-mini-value" style="color: var(--green);">6</div>
+                            <div class="stat-mini-label">Passed</div>
+                        </div>
+                        <div class="stat-mini">
+                            <div class="stat-mini-value" style="color: var(--red);">10</div>
+                            <div class="stat-mini-label">Failed</div>
+                        </div>
+                        <div class="stat-mini">
+                            <div class="stat-mini-value" style="color: var(--yellow);">2</div>
+                            <div class="stat-mini-label">Warned</div>
+                        </div>
+                    </div>
+
+                    <div class="table-controls" data-agent="3">
+                        <button class="filter-btn active" onclick="filterFindings(3, 'all', this)">Todos (18)</button>
+                        <button class="filter-btn" onclick="filterFindings(3, 'pass', this)">&#x1f7e2; Pass</button>
+                        <button class="filter-btn" onclick="filterFindings(3, 'warn', this)">&#x1f7e1; Warn</button>
+                        <button class="filter-btn" onclick="filterFindings(3, 'fail', this)">&#x1f534; Fail</button>
+                        <button class="filter-btn" onclick="filterFindings(3, 'info', this)">&#x1f535; Info</button>
+                    </div>
+
+                    <div style="overflow-x: auto;">
+                        <table class="findings-table" id="findings-table-3">
+                            <thead>
+                                <tr>
+                                    <th onclick="sortTable(3, 0)">Status &#8597;</th>
+                                    <th onclick="sortTable(3, 1)">Entity &#8597;</th>
+                                    <th onclick="sortTable(3, 2)">Check &#8597;</th>
+                                    <th>Detail</th>
+                                    <th>Remediación</th>
+                                    <th onclick="sortTable(3, 5)">Blast Radius &#8597;</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                <tr class="finding-row" data-status="fail" data-agent="3">
+                                    <td><span class="status-dot fail">FAIL</span></td>
+                                    <td>
+                                        <strong>orders-service</strong>
+                                        <br><span style="font-size: 0.7rem; color: var(--text-muted);">SERVICE-JKL012</span>
+                                    </td>
+                                    <td>Log retention policy</td>
+                                    <td>No retention policy defined, using cluster default (7d)</td>
+                                    <td>Set retention to 30d minimum for production services</td>
+                                    <td><span class="blast-badge blast-high">high</span></td>
+                                </tr>
+                                <tr class="finding-row" data-status="info" data-agent="3">
+                                    <td><span class="status-dot info">INFO</span></td>
+                                    <td>
+                                        <strong>batch-processor</strong>
+                                        <br><span style="font-size: 0.7rem; color: var(--text-muted);">SERVICE-MNO345</span>
+                                    </td>
+                                    <td>Log ingest volume</td>
+                                    <td>High log volume (2.3GB/day), consider sampling</td>
+                                    <td>Enable adaptive sampling for DEBUG level logs</td>
+                                    <td><span class="blast-badge blast-low">low</span></td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <!-- ANALYSIS AUTO-OPEN: score < 55, so class="open" on both header and body -->
+                    <div style="margin-top: 1.5rem; border-top: 1px solid var(--border-color); padding-top: 1rem;">
+                        <div class="collapsible-header open" onclick="toggleCollapsible(this)">
+                            <span class="collapsible-arrow">&#9654;</span>
+                            Análisis IA — Log Management
+                        </div>
+                        <div class="collapsible-body open">
+                            <div class="analysis-content">
+                                <h3>Diagnóstico Crítico</h3>
+                                <p>La gestión de logs presenta brechas severas que comprometen la capacidad de diagnóstico ante incidentes. El <strong>55% de servicios productivos</strong> carece de políticas de retención explícitas.</p>
+                                <h3>Plan de Remediación</h3>
+                                <table>
+                                    <thead>
+                                        <tr><th>Servicio</th><th>Issue</th><th>Prioridad</th></tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr><td>orders-service</td><td>Sin retención definida</td><td>Alta</td></tr>
+                                        <tr><td>batch-processor</td><td>Alto volumen sin sampling</td><td>Media</td></tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- EMPTY STATE: shown when results list is empty -->
+            <!--
+            <div class="card" style="text-align: center; padding: 4rem 2rem;">
+                <p style="font-size: 1.2rem; color: var(--text-muted); margin-bottom: 0.5rem;">Sin resultados de auditoría</p>
+                <p style="font-size: 0.85rem; color: var(--text-muted);">No se encontraron datos para generar el informe.</p>
+            </div>
+            -->
+
+        </div>
+
+        <!-- ═══════════════════════════════════════════════
+             FOOTER: generation timestamp, tool/company info
+             margin-left: var(--sidebar-width) to align with main content
+             ═══════════════════════════════════════════════ -->
+        <footer class="report-footer">
+            <!-- LOGO: <img src="data:image/png;base64,{logo_base64}" alt="Observability Auditor"> -->
+            <div class="footer-powered">Powered by Observability Auditor</div>
+            <!-- TIMESTAMP: injected by JS into #genTimestamp span -->
+            <div>Observability Auditor &mdash; Generado el <span id="genTimestamp"></span></div>
+            <div style="margin-top: 0.3rem; font-size: 0.7rem; color: var(--text-muted);">
+                Este informe es confidencial y está destinado exclusivamente al uso del cliente.
+            </div>
+        </footer>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════
+         JAVASCRIPT
+         ═══════════════════════════════════════════════ -->
+    <script>
+        /* ── Timestamp ── */
+        (function() {
+            var el = document.getElementById('genTimestamp');
+            if (el) {
+                el.textContent = new Date().toLocaleDateString('es-AR', {
+                    year: 'numeric', month: 'long', day: 'numeric',
+                    hour: '2-digit', minute: '2-digit'
+                });
+            }
+        })();
+
+        /* ── Theme Toggle ── */
+        function toggleTheme() {
+            var html = document.documentElement;
+            var current = html.getAttribute('data-theme');
+            var next = current === 'dark' ? 'light' : 'dark';
+            html.setAttribute('data-theme', next);
+            localStorage.setItem('obs-audit-theme', next);
+            updateThemeUI(next);
+        }
+
+        function updateThemeUI(theme) {
+            var icon = document.getElementById('themeIcon');
+            var label = document.getElementById('themeLabel');
+            if (icon) icon.textContent = theme === 'dark' ? '\u2600' : '\u263D';
+            if (label) label.textContent = theme === 'dark' ? 'Modo Claro' : 'Modo Oscuro';
+        }
+
+        (function() {
+            var saved = localStorage.getItem('obs-audit-theme');
+            if (saved) {
+                document.documentElement.setAttribute('data-theme', saved);
+                updateThemeUI(saved);
+            }
+        })();
+
+        /* ── Scroll Spy: tracks active section, updates sidebar nav ── */
+        (function() {
+            var sections = document.querySelectorAll('.agent-section');
+            var navLinks = document.querySelectorAll('.sidebar-nav a');
+
+            function onScroll() {
+                var scrollPos = window.scrollY + 120;
+                var active = null;
+                sections.forEach(function(sec) {
+                    if (sec.offsetTop <= scrollPos) {
+                        active = sec.id;
+                    }
+                });
+                navLinks.forEach(function(link) {
+                    link.classList.remove('active');
+                    if (link.getAttribute('data-section') === active) {
+                        link.classList.add('active');
+                    }
+                });
+            }
+
+            window.addEventListener('scroll', onScroll, { passive: true });
+            onScroll();
+        })();
+
+        /* ── Scroll Animation (IntersectionObserver) ── */
+        (function() {
+            var observer = new IntersectionObserver(function(entries) {
+                entries.forEach(function(entry) {
+                    if (entry.isIntersecting) {
+                        entry.target.classList.add('visible');
+                    }
+                });
+            }, { threshold: 0.08, rootMargin: '0px 0px -40px 0px' });
+
+            document.querySelectorAll('.animate-in').forEach(function(el) {
+                observer.observe(el);
+            });
+        })();
+
+        /* ── Findings Filter ── */
+        function filterFindings(agentIndex, status, btn) {
+            var table = document.getElementById('findings-table-' + agentIndex);
+            if (!table) return;
+            var rows = table.querySelectorAll('.finding-row');
+            rows.forEach(function(row) {
+                if (status === 'all' || row.getAttribute('data-status') === status) {
+                    row.classList.remove('hidden-by-filter');
+                } else {
+                    row.classList.add('hidden-by-filter');
+                }
+            });
+
+            var controls = btn.parentElement;
+            controls.querySelectorAll('.filter-btn').forEach(function(b) {
+                b.classList.remove('active');
+            });
+            btn.classList.add('active');
+        }
+
+        /* ── Table Sorting ── */
+        var sortDirections = {};
+        function sortTable(agentIndex, colIndex) {
+            var table = document.getElementById('findings-table-' + agentIndex);
+            if (!table) return;
+            var tbody = table.querySelector('tbody');
+            var rows = Array.from(tbody.querySelectorAll('tr'));
+            var key = agentIndex + '-' + colIndex;
+            var asc = !sortDirections[key];
+            sortDirections[key] = asc;
+
+            rows.sort(function(a, b) {
+                var aText = (a.cells[colIndex] && a.cells[colIndex].textContent.trim()) || '';
+                var bText = (b.cells[colIndex] && b.cells[colIndex].textContent.trim()) || '';
+                var cmp = aText.localeCompare(bText, undefined, { numeric: true });
+                return asc ? cmp : -cmp;
+            });
+
+            rows.forEach(function(row) {
+                tbody.appendChild(row);
+            });
+        }
+
+        /* ── Collapsible ── */
+        function toggleCollapsible(header) {
+            header.classList.toggle('open');
+            var body = header.nextElementSibling;
+            if (body) body.classList.toggle('open');
+        }
+
+        function expandAll() {
+            document.querySelectorAll('.collapsible-header').forEach(function(h) {
+                h.classList.add('open');
+                var b = h.nextElementSibling;
+                if (b) b.classList.add('open');
+            });
+        }
+
+        function collapseAll() {
+            document.querySelectorAll('.collapsible-header').forEach(function(h) {
+                h.classList.remove('open');
+                var b = h.nextElementSibling;
+                if (b) b.classList.remove('open');
+            });
+        }
+
+        /* ── Global Search (debounced, filters .finding-row by text content) ── */
+        (function() {
+            var searchInput = document.getElementById('globalSearch');
+            if (!searchInput) return;
+
+            var debounceTimer;
+            searchInput.addEventListener('input', function() {
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(function() {
+                    performSearch(searchInput.value.trim().toLowerCase());
+                }, 200);
+            });
+
+            searchInput.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    searchInput.value = '';
+                    performSearch('');
+                }
+            });
+
+            function performSearch(query) {
+                /* Remove old highlights */
+                document.querySelectorAll('.search-highlight').forEach(function(el) {
+                    var parent = el.parentNode;
+                    parent.replaceChild(document.createTextNode(el.textContent), el);
+                    parent.normalize();
+                });
+
+                var allRows = document.querySelectorAll('.finding-row');
+                if (!query) {
+                    allRows.forEach(function(row) {
+                        row.classList.remove('hidden-by-search');
+                    });
+                    return;
+                }
+
+                allRows.forEach(function(row) {
+                    var text = row.textContent.toLowerCase();
+                    if (text.indexOf(query) !== -1) {
+                        row.classList.remove('hidden-by-search');
+                    } else {
+                        row.classList.add('hidden-by-search');
+                    }
+                });
+            }
+        })();
+
+        /* ── Smooth scroll for sidebar links ── */
+        document.querySelectorAll('.sidebar-nav a').forEach(function(link) {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                var target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }
+            });
+        });
+
+        /* ── Animated score counters (eased count-up on intersection) ── */
+        (function() {
+            var counters = document.querySelectorAll('.score-card-value');
+            var observer = new IntersectionObserver(function(entries) {
+                entries.forEach(function(entry) {
+                    if (entry.isIntersecting) {
+                        animateCounter(entry.target);
+                        observer.unobserve(entry.target);
+                    }
+                });
+            }, { threshold: 0.5 });
+
+            counters.forEach(function(c) { observer.observe(c); });
+
+            function animateCounter(el) {
+                var target = parseFloat(el.textContent.trim());
+                if (isNaN(target)) return;
+                var start = 0;
+                var duration = 1200;
+                var startTime = null;
+
+                function step(timestamp) {
+                    if (!startTime) startTime = timestamp;
+                    var progress = Math.min((timestamp - startTime) / duration, 1);
+                    var eased = 1 - Math.pow(1 - progress, 3);
+                    var current = (start + (target - start) * eased).toFixed(1);
+                    el.textContent = current;
+                    if (progress < 1) {
+                        requestAnimationFrame(step);
+                    } else {
+                        el.textContent = target;
+                    }
+                }
+
+                requestAnimationFrame(step);
+            }
+        })();
+    </script>
+</body>
+</html>
